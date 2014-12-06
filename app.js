@@ -4,6 +4,9 @@ var bodyParser = require('body-parser');
 var methodOverride = require('method-override')
 var cors = require('cors')
 
+// Config file that sets certain parameters given the environment
+var config = require('./config')();
+
 var app = express();
 
 // Middleware
