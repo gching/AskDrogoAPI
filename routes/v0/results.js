@@ -16,7 +16,7 @@ CREATE TABLE results(
   lang text,
   id timeuuid,
   response text,
-  voting text,
+  vote int,
   PRIMARY KEY((item_id, lang, id))
 );
 */
@@ -48,7 +48,7 @@ router.post('/:item_id/results', function(req, res, next) {
   var params = permitted_params(req.body)
 
   // Compile query and execute
-  var query = "INSERT into results (item_id, lang, id, response) values (?, ?, ?, ?)"
+  var query = "INSERT into results (item_id, lang, id, response, vote) values (?, ?, ?, ?, 0)"
   var query_params = [req.params.item_id, params.lang, result_id, params.response]
 
   DB.executeAsPrepared(query, query_params, default_write, function(err){

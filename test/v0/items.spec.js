@@ -80,7 +80,7 @@ describe("Items API", function(){
     })
 
   })
-
+/*
   describe("DELETE /items/:id", function(){
     beforeEach(function(done){
       superagent.del(address + item_id)
@@ -100,5 +100,5 @@ describe("Items API", function(){
         done()
       })
     })
-  })
+  })*/
 })

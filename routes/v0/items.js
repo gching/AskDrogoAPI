@@ -15,7 +15,7 @@ var _ = require("underscore")
     id timeuuid,
     source text,
     lang text,
-    voting text,
+    vote int,
     targets set<text>,
     PRIMARY KEY(id)
   );
@@ -48,7 +48,7 @@ router.post('/', function(req, res, next) {
   var params = permitted_params(req.body)
 
   // Compile query and execute
-  var query = "INSERT into items (id, source, lang, targets) values (?, ?, ?, ?)"
+  var query = "INSERT into items (id, source, lang, targets, vote) values (?, ?, ?, ?, 0)"
   var query_params = [item_id, params.source, params.lang, params.targets]
 
   DB.executeAsPrepared(query, query_params, default_write, function(err){
