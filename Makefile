@@ -3,6 +3,6 @@ TESTS =  test/$(VERSION)/*.js
 CONFIG?= local
 
 test:
-	env CONFIG=$(CONFIG) VERSION=$(VERSION)  mocha --timeout 10000 $(TESTS)
+	env CONFIG=$(CONFIG) VERSION=$(VERSION)  mocha --timeout 10000 $(TESTS) --reporter nyan
 
-	.PHONY: test
+.PHONY: test
