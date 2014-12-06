@@ -7,19 +7,19 @@ var config = {
         mode: 'local',
 	      port: 3000,
         cass_db: ["127.0.0.1"],
-        cass_keyspace: "askdrogo-local"
+        cass_keyspace: "askdrogo_local"
     },
     staging: {
         mode: 'staging',
         port: 4000,
         cass_db: ["127.0.0.1"],
-        cass_keyspace: "askdrogo-staging"
+        cass_keyspace: "askdrogo_staging"
     },
     production: {
         mode: 'production',
         port: 5000,
         cass_db: ["127.0.0.1"],
-        cass_keyspace: "askdrogo-production"
+        cass_keyspace: "askdrogo_production"
     }
 }
 module.exports = function(mode) {

@@ -17,7 +17,8 @@
     "jade": "~1.3.0",
     "underscore": "*",
     "validator": "*",
-    "async": "*"
+    "async": "*",
+    "node-cassandra-cql": "0.5.x"
   },
   "devDependencies": {
     "chai": "*",

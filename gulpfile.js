@@ -10,4 +10,5 @@ gulp.task('server', function () {
 
   // Restart the server when file changes
   gulp.watch(['app.js', 'routes/**/*.js'], [server.run]);
+
 });

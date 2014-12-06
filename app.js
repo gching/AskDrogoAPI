@@ -3,6 +3,8 @@ var logger = require('morgan');
 var bodyParser = require('body-parser');
 var methodOverride = require('method-override')
 var cors = require('cors')
+var cass = require('node-cassandra-cql')
+var DB = require('./config/db')
 
 // Config file that sets certain parameters given the environment
 var config = require('./config')();
@@ -18,6 +20,9 @@ app.use(cors()) // Cross Origin
 //app.use(cookieParser());
 //app.use(express.static(path.join(__dirname, 'public')));
 
+// Setup database
+var cassClient = new cass.Client({hosts: config.cass_db, keyspace: config.cass_keyspace});
+DB.setDB(cassClient)
 
 
 /*  Routes   */
@@ -50,10 +55,12 @@ app.use(function(req, res, next) {
 if (app.get('env') === 'development') {
     app.use(function(err, req, res, next) {
         res.status(err.status || 500);
-        res.send({
-            message: err.message,
-            error: err
-        });
+        var error_msg = {
+          message: err.message,
+          error: err
+        }
+        console.log(error_msg)
+        res.send(error_msg);
     });
 }
 
