@@ -6,9 +6,11 @@ var router = express.Router()
 
 // Route requiring
 var items = require('./v0/items')
+var results = require('./v0/results')
 
 // Item routes
 router.use('/items', items)
+router.use('/items', results)
 
 
 module.exports = router;

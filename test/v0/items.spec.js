@@ -64,7 +64,7 @@ describe("Items API", function(){
       done()
     })
   })
-
+  // TODO updates as null
   it("POST /items/:id", function(done){
     superagent.post(address + item_id)
     .send({

@@ -35,7 +35,7 @@ var permitted_params = function(request_params){
 
 // Index
 router.get('/', function(req, res, next){
-  DB.execute("SELECT * FROM items", default_read, function(e, results){
+  DB.executeAsPrepared("SELECT * FROM items", default_read, function(e, results){
   if (e) return next(e)
     res.send({ items: results.rows})
   })
