@@ -13,13 +13,11 @@ var _ = require("underscore")
 /**** Schema *****
   CREATE TABLE item(
     id timeuuid,
-    target text,
     source text,
     lang text,
-    results text,
     voting text,
     targets set<text>,
-    PRIMARY KEY(id, target)
+    PRIMARY KEY(id)
   );
 */
 
@@ -48,16 +46,12 @@ router.post('/', function(req, res, next) {
   var item_id = cass.types.timeuuid()
 
   var params = permitted_params(req.body)
-  // Compile partition key insert by going through each target and inserting each target language by batch
-  var queries = []
-  _.each(params.targets, function(target){
-    queries.push({
-      query: "INSERT into items (id, target, source, lang, targets) values (?, ?, ?, ?, ?)",
-      params: [item_id, target, params.source, params.lang, params.targets]
-    })
-  })
 
-  DB.executeBatch(queries, default_write, function(err){
+  // Compile query and execute
+  var query = "INSERT into items (id, source, lang, targets) values (?, ?, ?, ?)"
+  var query_params = [item_id, params.source, params.lang, params.targets]
+
+  DB.executeAsPrepared(query, query_params, default_write, function(err){
     if(err) return next(err)
     // Set the id in the params and return it
     params.id = item_id
@@ -76,45 +70,23 @@ router.post('/:id', function(req, res, next){
   var params = permitted_params(req.body)
 
   var id = req.params.id
-  // First get all the targets current in the database by executing a read
-  DB.executeAsPrepared("SELECT targets FROM items WHERE id=? LIMIT 1", [id], default_read, function(err, response){
-    if (err) return next(err)
-    // Go through each of the targets, old or new ones by unioning the read targets and request targets
-    // and do an update / insert.
-    var old_targets = response.rows[0].targets
-    var queries = []
 
-    // Update old ones with the new targets by adding them in cql
-    _.each(old_targets, function(target){
-      queries.push({
-        query: "UPDATE items SET source=?, lang=?, targets = targets + ? WHERE id=? and target=?",
-        params: [params.source, params.lang, params.targets, id, target]
-      })
-    })
+  // Compile query and execute
+  var query = "UPDATE items SET source=?, lang=?, targets = targets + ? WHERE id=?"
+  var query_params = [params.source, params.lang, params.targets, id]
 
-    // Insert the new ones by differencing them and doing an insert with the combined
-    var new_targets = _.difference(params.targets, old_targets)
-    var all_targets = _.union(new_targets, old_targets)
-    _.each(new_targets, function(target){
-      queries.push({
-        query: "INSERT into items (id, target, source, lang, targets) values (?, ?, ?, ?, ?)",
-        params: [id, target, params.source, params.lang, all_targets]
-      })
-    })
-
-    DB.executeBatch(queries, default_write, function(err){
-      if(err) return next(err)
-        // Set the id in the params and return it
-        params.id = req.params.id
-        res.send({ item: params })
-      })
+  DB.executeAsPrepared(query, query_params, default_write, function(err){
+    if(err) return next(err)
+    // Set the id in the params and return it
+    params.id = id
+    res.send({ item: params })
   })
 })
 
 // Show
 router.get('/:id', function(req, res, next){
   // Prepare query and execute
-  var query = "SELECT * FROM items WHERE id=? LIMIT 1"
+  var query = "SELECT * FROM items WHERE id=?"
   var id = req.params.id
   DB.executeAsPrepared(query, [req.params.id], default_read, function(error, result){
     if(error) return next(error)
