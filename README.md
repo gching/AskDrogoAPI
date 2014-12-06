@@ -1,6 +1,6 @@
 # AskDrogo API
 
-![DrogoMascot](http://img2.wikia.nocookie.net/__cb20110425023255/gameofthrones/images/9/92/Drogo_1x01.jpg)
+![DrogoMascot](http://primetime.unrealitytv.co.uk/wp-content/uploads/2014/06/khal-drogo-got.jpg)
 
 > Maan anha vazhak jin ador shiqethi finaan neva ave maisi mae.
 
