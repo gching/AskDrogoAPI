@@ -19,8 +19,9 @@ var version = process.env.VERSION
 var address = "http://localhost:" + port + "/" + version + "/items/"
 
 var item_parameters = {
-  translate: "Hi there",
-  to: ["arabic", "japanese"]
+  source: "Hi there",
+  lang: "english",
+  targets: ["arabic", "japanese"]
 }
 var item_id
 
@@ -32,8 +33,9 @@ describe("Items API", function(){
       expect(response.status).to.eql(200)
       item_id = response.body.item.id
       expect(validator.isUUID(item_id)).to.be.true
-      expect(response.body.item.translate).to.eql(item_parameters.translate)
-      expect(response.body.item.to).to.eql({arabic: null, japanese: null})
+      expect(response.body.item.source).to.eql(item_parameters.source)
+      expect(response.body.item.lang).to.eql(item_parameters.lang)
+      expect(response.body.item.targets).to.eql(item_parameters.targets)
       done()
     })
   })
@@ -43,9 +45,9 @@ describe("Items API", function(){
     .end(function(err, response){
       expect(response.status).to.eql(200)
       expect(response.body.item.id).to.eql(item_id)
-      expect(response.body.item.translate).to.eql(item_parameters.translate)
-      expect(response.body.item.to).to.eql(item_parameters.to)
-      expect(response.body.item.results).to.eql({arabic: null, japanese: null})
+      expect(response.body.item.source).to.eql(item_parameters.source)
+      expect(response.body.item.lang).to.eql(item_parameters.lang)
+      expect(response.body.item.targets).to.eql(item_parameters.targets)
       done()
     })
   })
@@ -66,15 +68,14 @@ describe("Items API", function(){
   it("POST /items/:id", function(done){
     superagent.post(address + item_id)
     .send({
-      translate: "New translate",
-      to: ["chinese"]
+      source: "New translate",
+      targets: ["chinese"]
     })
     .end(function(err, response){
       expect(response.status).to.eql(200)
       expect(response.body.item.id).to.eql(item_id)
-      expect(response.body.item.translate).to.eql("New translate")
-      expect(response.body.item.to).to.eql(["chinese"])
-      expect(response.body.item.results).to.eql({chinese: null})
+      expect(response.body.item.source).to.eql("New translate")
+      expect(response.body.item.targets).to.eql(["chinese"])
       done()
     })
 
@@ -84,15 +85,12 @@ describe("Items API", function(){
     beforeEach(function(done){
       superagent.del(address + item_id)
       .end(function(err, response){
-        var msg = response.body.msg
+        msg = response.body.msg
         done()
       })
     })
-    it("should be successful", function(done){
+    it("should be successful and not findable", function(done){
       expect(msg).to.eql("success")
-      done()
-    })
-    it("should be not findable", function(done){
       superagent.get(address)
       .end(function(err, response){
         mapped_items_id = response.body.items.map(function(item){
