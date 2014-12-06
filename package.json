@@ -22,9 +22,11 @@
   "devDependencies": {
     "chai": "*",
     "chai-things": "*",
-    "mocha": "*",
-    "superagent": "~0.17.0",
     "faker": "*",
-    "node-inspector": "*"
+    "gulp": "^3.8.10",
+    "gulp-express": "^0.1.1",
+    "mocha": "*",
+    "node-inspector": "*",
+    "superagent": "~0.17.0"
   }
 }
