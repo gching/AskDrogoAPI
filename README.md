@@ -6,7 +6,7 @@
 
 ## Introduction
 
-**A work in progress**
+**A work in progress for Global Hackathon**
 
 The *AskDrogo API* is the backend base of the AskDrogo application. AskDrogo is an application that provides accurate and real time translations for items such as text, speech and video. Imagine the possibilities of talking, real time, to the Dothraki without actually understanding their language!
 
