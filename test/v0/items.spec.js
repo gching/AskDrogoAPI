@@ -80,7 +80,33 @@ describe("Items API", function(){
     })
 
   })
-/*
+
+  describe("and voting", function(){
+    before(function(done){
+      superagent.post(address + item_id + "/vote")
+      .send({
+        vote: 5
+      })
+      .end(function(err, response){
+        msg = response.body.msg
+        done()
+      })
+    })
+    it("should be successful", function(done){
+      expect(msg).to.eql("success")
+      done()
+    })
+    it("should have incremented the vote count by 5", function(done){
+      superagent.get(address + item_id + "/vote")
+      .end(function(err, response){
+        var item_vote_count = response.body.vote.count
+        expect(item_vote_count).to.eql(5)
+        done()
+      })
+    })
+
+  })
+
   describe("DELETE /items/:id", function(){
     beforeEach(function(done){
       superagent.del(address + item_id)
@@ -100,5 +126,7 @@ describe("Items API", function(){
         done()
       })
     })
-  })*/
+  })
+
+
 })

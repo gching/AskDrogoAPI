@@ -7,6 +7,7 @@ var cass = require('node-cassandra-cql')
 var DB =  (require('../../config/db')).getDB();
 var default_read = cass.types.consistencies.one
 var default_write = cass.types.consistencies.any
+var quorem = cass.types.consistencies.quorem
 
 var _ = require("underscore")
 
@@ -15,7 +16,6 @@ var _ = require("underscore")
     id timeuuid,
     source text,
     lang text,
-    vote int,
     targets set<text>,
     PRIMARY KEY(id)
   );
@@ -48,7 +48,7 @@ router.post('/', function(req, res, next) {
   var params = permitted_params(req.body)
 
   // Compile query and execute
-  var query = "INSERT into items (id, source, lang, targets, vote) values (?, ?, ?, ?, 0)"
+  var query = "INSERT into items (id, source, lang, targets) values (?, ?, ?, ?)"
   var query_params = [item_id, params.source, params.lang, params.targets]
 
   DB.executeAsPrepared(query, query_params, default_write, function(err){
@@ -98,6 +98,29 @@ router.get('/:id', function(req, res, next){
     }
   })
 })
+
+// Post for vote
+router.post('/:id/vote', function(req, res, next){
+  // Increment the vote by updating
+  var query = "UPDATE votes SET count = count + ? WHERE id=?"
+  var query_params = [{value: req.body.vote, hint: "counter"}, req.params.id]
+  DB.executeAsPrepared(query, query_params, quorem, function(err, response){
+    if (err) return next(err)
+    res.send({msg: "success"})
+  })
+})
+
+// Get for vote
+router.get('/:id/vote', function(req, res, next){
+  // Get the vote by its id
+  var query = "SELECT * FROM votes WHERE id=?"
+  var query_params = [req.params.id]
+
+  DB.executeAsPrepared(query, query_params, quorem, function(err, response){
+    if (err) return next(err)
+      res.send({vote : {count: response.rows[0].count.low } })
+    })
+  })
 
 // Delete
 router.delete('/:id', function(req, res, next){
