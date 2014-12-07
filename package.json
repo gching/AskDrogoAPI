@@ -18,7 +18,8 @@
     "underscore": "*",
     "validator": "*",
     "async": "*",
-    "node-cassandra-cql": "0.5.x"
+    "node-cassandra-cql": "0.5.x",
+    "pubnub": "*"
   },
   "devDependencies": {
     "chai": "*",
