@@ -4,7 +4,8 @@
 var express = require('express')
 var router = express.Router()
 var cass = require('node-cassandra-cql')
-var DB =  (require('../../config/db')).getDB();
+var DB =  require('../../config/db').getDB();
+var pubnub = require('../../config/pubnub').getNub();
 var default_read = cass.types.consistencies.one
 var default_write = cass.types.consistencies.any
 var quorem = cass.types.consistencies.quorem
@@ -55,7 +56,20 @@ router.post('/', function(req, res, next) {
     if(err) return next(err)
     // Set the id in the params and return it
     params.id = item_id
-    res.send({ item: params })
+
+    // Pubnub object contains an "a" key to indicate
+    // if this is an addition of a new item or deletion
+    var pubnub_response = {
+      a: "+",
+      item: params
+    }
+    // Send over to pubnub the new items response
+    pubnub.publish({
+      channel: 'item_stream',
+      message: pubnub_response
+    })
+
+    res.send({item: params})
   })
 
 
@@ -79,6 +93,19 @@ router.post('/:id', function(req, res, next){
     if(err) return next(err)
     // Set the id in the params and return it
     params.id = id
+
+    // Pubnub object contains an "a" key to indicate
+    // if this is an addition of a new item, update, or delete
+    var pubnub_response = {
+      a: "u",
+      item: params
+    }
+    // Send over to pubnub the new items response
+    pubnub.publish({
+      channel: 'item_stream',
+      message: pubnub_response
+    })
+
     res.send({ item: params })
   })
 })
@@ -129,6 +156,19 @@ router.delete('/:id', function(req, res, next){
   var id = req.params.id
   DB.executeAsPrepared(query, [id], default_write, function(err, result){
     if (err) return next(err)
+
+      // Pubnub object contains an "a" key to indicate
+      // if this is an addition of a new item, update, or delete
+      var pubnub_response = {
+        a: "-",
+        item: {id: id}
+      }
+      // Send over to pubnub the new items response
+      pubnub.publish({
+        channel: 'item_stream',
+        message: pubnub_response
+      })
+
     res.send((result)?{msg:'success'}:{msg:'error'})
   })
 })

@@ -5,6 +5,7 @@ var express = require('express')
 var router = express.Router()
 var cass = require('node-cassandra-cql')
 var DB =  (require('../../config/db')).getDB();
+var pubnub = require('../../config/pubnub').getNub();
 var default_read = cass.types.consistencies.one
 var default_write = cass.types.consistencies.any
 var quorem = cass.types.consistencies.quorem
@@ -55,6 +56,19 @@ router.post('/:item_id/results', function(req, res, next) {
     if(err) return next(err)
     // Set the id in the params and return it
     params.id = result_id
+
+    // Pubnub object contains an "a" key to indicate
+    // if this is an addition of a new item, update, or delete
+    var pubnub_response = {
+      a: "+",
+      result: params
+    }
+    // Send over to pubnub the new items response
+    pubnub.publish({
+      channel: 'result_stream',
+      message: pubnub_response
+    })
+
     res.send({ result: params })
   })
 })
@@ -84,6 +98,20 @@ router.post('/:item_id/results/:lang/:id', function(req, res, next){
       params.id = req.params.id
       // Set the new redirect url
       params.redirect_url = "/results/" + params.lang + "/" + params.id
+
+      // Pubnub object contains an "a" key to indicate
+      // if this is an addition of a new item, update, or delete
+      var pubnub_response = {
+        a: "u",
+        result: params
+      }
+
+      // Send over to pubnub the new items response
+      pubnub.publish({
+        channel: 'result_stream',
+        message: pubnub_response
+      })
+
       res.send({ result: params })
     })
   })
@@ -138,6 +166,20 @@ router.delete('/:item_id/results/:lang/:id', function(req, res, next){
 
   DB.executeAsPrepared(delete_query, delete_params, default_write, function(err, result){
     if(err) return next(err)
+
+      // Pubnub object contains an "a" key to indicate
+      // if this is an addition of a new item, update, or delete
+      var pubnub_response = {
+        a: "-",
+        result: delete_params
+      }
+
+      // Send over to pubnub the new items response
+      pubnub.publish({
+        channel: 'result_stream',
+        message: pubnub_response
+      })
+
     res.send((result) ? {msg: "success"} : {msg: "error"})
   })
 })

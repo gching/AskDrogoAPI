@@ -5,6 +5,7 @@ var methodOverride = require('method-override')
 var cors = require('cors')
 var cass = require('node-cassandra-cql')
 var DB = require('./config/db')
+var PUBNUB = require('./config/pubnub')
 
 // Config file that sets certain parameters given the environment
 var config = require('./config')();
@@ -23,6 +24,9 @@ app.use(cors()) // Cross Origin
 // Setup database
 var cassClient = new cass.Client({hosts: config.cass_db, keyspace: config.cass_keyspace});
 DB.setDB(cassClient)
+
+// Initialize PUBNUB
+PUBNUB.setNub()
 
 
 /*  Routes   */
