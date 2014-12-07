@@ -17,6 +17,7 @@ var version = process.env.VERSION
 
 // Set the address.
 var address = "http://localhost:" + port + "/" + version + "/users/"
+var login = "http://localhost:" + port + '/' + version + "/login"
 
 var usr_par = {
   email: "gavinchingy@gmail.com",
@@ -32,8 +33,6 @@ describe("Users API", function(){
     .send(usr_par)
     .end(function(err, response){
       expect(response.status).to.eql(200)
-      usr_id = response.body.user.id
-      expect(validator.isUUID(usr_id)).to.be.true
       var user = response.body.user
       expect(user.email).to.eql(usr_par.email)
       expect(user.name).to.eql(usr_par.name)
@@ -43,7 +42,7 @@ describe("Users API", function(){
   })
 
   it("GET /users/:id", function(done){
-    superagent.get(address + usr_id)
+    superagent.get(address + usr_par.email)
     .end(function(err, response){
       expect(response.status).to.eql(200)
       var user = response.body.user
@@ -60,16 +59,16 @@ describe("Users API", function(){
       expect(response.status).to.eql(200)
       expect(_.isArray(response.body.users)).to.be.true
       mapped_users_id = response.body.users.map(function(user){
-        return user.id
+        return user.email
       })
-      expect(mapped_users_id).to.contain(usr_id)
+      expect(mapped_users_id).to.contain(usr_par.email)
       done()
     })
   })
 
   // TODO updates as null
   it("POST /users/:id", function(done){
-    superagent.post(address + usr_id)
+    superagent.post(address + usr_par.email)
     .send({
       name: "Derp",
       langs: ["derp"]
@@ -84,15 +83,28 @@ describe("Users API", function(){
 
   })
 
-  describe("and logging in and out", function(){
+  describe("and logging in", function(){
     before(function(done){
-      
+      superagent.post(login)
+      .send({
+        email: usr_par.email,
+        password: usr_par.password
+      })
+      .end(function(e, res){
+        msg = res.body.message
+        done()
+      })
+    })
+
+    it('should be successful', function(done){
+      expect(msg).to.eql('success')
+      done()
     })
   })
 
   describe("DELETE /users/:id", function(){
     beforeEach(function(done){
-      superagent.del(address + usr_id)
+      superagent.del(address + usr_par.email)
       .end(function(err, response){
         msg = response.body.msg
         done()
@@ -103,9 +115,9 @@ describe("Users API", function(){
       superagent.get(address)
       .end(function(err, response){
         mapped_users_id = response.body.users.map(function(usr){
-          return usr.id
+          return usr.email
         })
-        expect(mapped_users_id).to.not.contain(usr_id)
+        expect(mapped_users_id).to.not.contain(usr_par.email)
         done()
       })
     })

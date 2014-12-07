@@ -2,11 +2,14 @@ var express = require('express');
 var logger = require('morgan');
 var bodyParser = require('body-parser');
 var methodOverride = require('method-override')
+var session = require('express-session')
+var passport = require('passport')
+var LocalStrategy = require('passport-local').Strategy
+
 var cors = require('cors')
 var cass = require('node-cassandra-cql')
 var DB = require('./config/db')
 var PUBNUB = require('./config/pubnub')
-
 // Config file that sets certain parameters given the environment
 var config = require('./config')();
 
@@ -27,6 +30,12 @@ DB.setDB(cassClient)
 
 // Initialize PUBNUB
 PUBNUB.setNub()
+
+
+// Sessions and passport bootstrap for user login
+app.use(session({secret: '32e91d5fc9fbee268f5ad0f17e7dfb8543f6ba878581afb7513f0d3819059c66b22a72c181eb5977b040c595a1f2a3153d244c29d1ed18fd28e783405ce33ed9', saveUninitialized: true, resave: true}));
+app.use(passport.initialize());
+app.use(passport.session());
 
 
 /*  Routes   */

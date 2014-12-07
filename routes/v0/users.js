@@ -7,6 +7,7 @@ var cass = require('node-cassandra-cql')
 var DB =  require('../../config/db').getDB();
 var pubnub = require('../../config/pubnub').getNub();
 var validator = require('validator')
+var pass = require('pwd');
 var default_read = cass.types.consistencies.one
 var default_write = cass.types.consistencies.any
 var quorem = cass.types.consistencies.quorem
@@ -27,8 +28,8 @@ PRIMARY KEY(id)
 // Permitted params
 var permitted_params = function(request_params){
   var permitted = {
-    id: request_params.id || null,
     email: request_params.email || null,
+    password: request_params.password || null,
     name: request_params.name || null,
     langs: request_params.langs|| null
   }
@@ -37,7 +38,7 @@ var permitted_params = function(request_params){
 
 // Index
 router.get('/', function(req, res, next){
-  DB.executeAsPrepared("SELECT * FROM users", default_read, function(e, results){
+  DB.executeAsPrepared("SELECT email, name, langs FROM users", default_read, function(e, results){
     if (e) return next(e)
     // Map over and unstringify langs
     var users_mapped = results.rows.map(function(user){
@@ -51,59 +52,59 @@ router.get('/', function(req, res, next){
 
   // Create
   router.post('/', function(req, res, next) {
-    var user_id = cass.types.timeuuid()
 
     var params = permitted_params(req.body)
+
     if(!validator.isEmail(params.email)){
       return next(new Error("The email is not an email!"))
     }
     // Compile query and execute
-    var query = "INSERT into users (id, email, name, langs) values (?, ?, ?, ?)"
-    var query_params = [user_id, params.email, params.name, JSON.stringify(params.langs)]
+    var query = "INSERT into users (email, password, salt, name, langs) values (?, ?, ?, ?, ?)"
+    // Hash the password and salt
+    pass.hash(params.password, function(err, salt, hash){
+      if(err) return next(new Error("User could not be created."))
+      var query_params = [params.email, hash, salt, params.name, JSON.stringify(params.langs)]
+      DB.executeAsPrepared(query, query_params, default_write, function(err){
+        if(err) return next(err)
+          // Set the id in the params and return it
 
-    DB.executeAsPrepared(query, query_params, default_write, function(err){
-      if(err) return next(err)
-        // Set the id in the params and return it
-        params.id = user_id
-        res.send({user: params})
+          res.send({user: _.omit(params, "password")})
+        })
       })
-
-
 
     })
 
 
     // Update
-    router.post('/:id', function(req, res, next){
+    router.post('/:email', function(req, res, next){
 
       // Get permitted params
       var params = permitted_params(req.body)
 
-      if(params.email && !validator.isEmail(params.email)){
+      if(req.params.email && !validator.isEmail(req.params.email)){
         return next(new Error("The email is not an email!"))
       }
 
-      var id = req.params.id
 
       // Compile query and execute
-      var query = "UPDATE users SET email=?, name=?, langs=? WHERE id=?"
-      var query_params = [params.email, params.name, JSON.stringify(params.langs), id]
+      var query = "UPDATE users SET name=?, langs=? WHERE email=?"
+      var query_params = [ params.name, JSON.stringify(params.langs), req.params.email]
 
       DB.executeAsPrepared(query, query_params, default_write, function(err){
         if(err) return next(err)
           // Set the id in the params and return it
-          params.id = id
+          params.email = req.params.email
 
           res.send({ user: params })
         })
       })
 
       // Show
-      router.get('/:id', function(req, res, next){
+      router.get('/:email', function(req, res, next){
         // Prepare query and execute
-        var query = "SELECT * FROM users WHERE id=?"
-        var id = req.params.id
-        DB.executeAsPrepared(query, [req.params.id], default_read, function(error, result){
+        var query = "SELECT email, name, langs FROM users WHERE email=?"
+        var email = req.params.email
+        DB.executeAsPrepared(query, [email], default_read, function(error, result){
           if(error) return next(error)
             var user = result.rows[0]
 
@@ -116,11 +117,11 @@ router.get('/', function(req, res, next){
           })
         })
 // Delete
-router.delete('/:id', function(req, res, next){
+router.delete('/:email', function(req, res, next){
   // Prepare query and delete
-  var query = "DELETE FROM users WHERE id=?"
-  var id = req.params.id
-  DB.executeAsPrepared(query, [id], default_write, function(err, result){
+  var query = "DELETE FROM users WHERE email=?"
+  var email = req.params.email
+  DB.executeAsPrepared(query, [email], default_write, function(err, result){
     if (err) return next(err)
 
       res.send((result)?{msg:'success'}:{msg:'error'})

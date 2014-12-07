@@ -20,7 +20,11 @@
     "pubnub": "*",
     "static-favicon": "~1.0.0",
     "underscore": "*",
-    "validator": "*"
+    "validator": "*",
+    "express-session": "*",
+    "passport": "*",
+    "passport-local": "*",
+    "pwd": "*"
   },
   "devDependencies": {
     "chai": "*",
